@@ -1,5 +1,6 @@
 using Core.Entities;
 using Core.Interfaces;
+using Core.Specification;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -9,16 +10,23 @@ namespace API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductsController(IProductRepository repo) : ControllerBase
-    {
-    
+    public class ProductsController(IGenericRepository<Product> repo) : ControllerBase
+    {   
         [HttpGet]
         //public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
         public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts(string? brand, string? type, string? sort)     
         {
             //return await context.Products.ToListAsync(); //This methods comes from normal Products without interface
             
-            return Ok(await repo.GetProductAsync(brand, type, sort));
+            //return Ok(await repo.GetProductAsync(brand, type, sort)); //Without generic repo
+
+            //Start - Specification Pattern
+                var spec = new ProductSpecification(brand, type, sort);
+
+                var product = await repo.ListAsync(spec);
+            //End - Specification Pattern
+
+            return Ok(product);
         }
 
         [HttpGet("{id:int}")] //api/products/2
@@ -26,7 +34,7 @@ namespace API.Controllers
         {
            // var product = await context.Products.FindAsync(id);
 
-           var product = await repo.GetProductByIdAsync(id);
+           var product = await repo.GetByIdAsync(id);
 
             if(product == null)
                 return NotFound();
@@ -41,9 +49,9 @@ namespace API.Controllers
 
             //await context.SaveChangesAsync();
 
-            repo.AddProduct(product);
+            repo.Add(product);
 
-            if(await repo.SaveChangesAsync()){
+            if(await repo.SaveAllAsync()){
                 return CreatedAtAction("GetProduct",new {id = product.Id}, product);
             }
 
@@ -65,9 +73,9 @@ namespace API.Controllers
              if(product.Id != id || !ProductExists(id))
                  return BadRequest("Cannot update this product");
 
-            repo.UpdateProduct(product);
+            repo.Update(product);
 
-            if(await repo.SaveChangesAsync()){
+            if(await repo.SaveAllAsync()){
                 return NoContent();
             }     
             return BadRequest("Problem updating the product");
@@ -88,14 +96,14 @@ namespace API.Controllers
 
             // return NoContent(); 
 
-            var product = await repo.GetProductByIdAsync(id);
+            var product = await repo.GetByIdAsync(id);
 
             if(product == null)
                 return NotFound();
 
-            repo.DeleteProduct(product);
+            repo.Remove(product);
 
-               if(await repo.SaveChangesAsync()){
+               if(await repo.SaveAllAsync()){
                 return NoContent();
             } 
 
@@ -106,13 +114,24 @@ namespace API.Controllers
         [HttpGet("brands")]
         public async Task<ActionResult<IReadOnlyList<string>>> GetBrands()
         {
-            return Ok(await repo.GetBrandsAsync());
+            // TODO: Implement method
+                //Start - Speification Pattern
+                    var spec = new BrandListSpecification();
+                //End - Speification Pattern
+
+            return Ok(await repo.ListAsync(spec));
+            //return Ok(await repo.GetBrandsAsync());
         }
 
         [HttpGet("types")]
         public async Task<ActionResult<IReadOnlyList<string>>> GetTypes()
         {
-            return Ok(await repo.GetTypesAsync());
+            // TODO: Implement method
+               //Start - Speification Pattern
+                    var spec = new TypeListSpecification();
+                //End - Speification Pattern
+            return Ok(await repo.ListAsync(spec));
+            //return Ok(await repo.GetTypesAsync());
         }
         
 
@@ -120,7 +139,7 @@ namespace API.Controllers
         {
             //return context.Products.Any(x => x.Id == id);
 
-            return repo.ProductExists(id);
+            return repo.Exists(id);
         }
     }
 }
