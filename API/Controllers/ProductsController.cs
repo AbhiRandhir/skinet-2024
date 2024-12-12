@@ -1,3 +1,4 @@
+using API.RequestHelpers;
 using Core.Entities;
 using Core.Interfaces;
 using Core.Specification;
@@ -10,23 +11,21 @@ namespace API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductsController(IGenericRepository<Product> repo) : ControllerBase
+    public class ProductsController(IGenericRepository<Product> repo) : BaseApiController
     {   
         [HttpGet]
         //public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
-        public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts(string? brand, string? type, string? sort)     
+        public async Task<ActionResult<IReadOnlyList<Product>>> GetProducts([FromQuery]ProductSpecParams specParams)     
         {
             //return await context.Products.ToListAsync(); //This methods comes from normal Products without interface
             
             //return Ok(await repo.GetProductAsync(brand, type, sort)); //Without generic repo
 
             //Start - Specification Pattern
-                var spec = new ProductSpecification(brand, type, sort);
+                var spec = new ProductSpecification(specParams);
 
-                var product = await repo.ListAsync(spec);
+                return await CreatePageResult(repo, spec, specParams.PageIndex, specParams.PageSize);    
             //End - Specification Pattern
-
-            return Ok(product);
         }
 
         [HttpGet("{id:int}")] //api/products/2
