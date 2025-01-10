@@ -36,6 +36,12 @@ builder.Services.AddSingleton<ICartService, CartService>();
 builder.Services.AddIdentityApiEndpoints<AppUser>()
         .AddEntityFrameworkStores<StoreContext>();
 //End - Section 14
+//Start - Section 16
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+//End - Section 16
+//Start - Section 17
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+//End - Section 17
 
 
 var app = builder.Build();

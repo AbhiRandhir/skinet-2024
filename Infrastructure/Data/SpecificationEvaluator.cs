@@ -1,5 +1,6 @@
 using Core.Entities;
 using Core.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data;
 
@@ -31,6 +32,12 @@ public class SpecificationEvaluator<T> where T : BaseEntity
         }
         //End - Section 5
 
+        //Start - Section 17 Orders API
+            query = spec.Includes.Aggregate(query, (current, include) => current.Include(include));
+            query = spec.IncludeStrings.Aggregate(query, (current, include) => current.Include(include));
+
+        //End - Section 17 Orders API
+        // Aggregate :- More than one things
         return query;
     }
 

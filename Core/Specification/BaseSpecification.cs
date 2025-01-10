@@ -22,6 +22,12 @@ public class BaseSpecification<T>(Expression<Func<T, bool>>? criteria) : ISpecif
 
     public bool IsPagingEnabled { get; private set; }
 
+    //Start - Section 17 Order API
+    public List<Expression<Func<T, object>>> Includes { get; } = [];
+
+    public List<string> IncludeStrings { get; } = [];
+
+    //End - Section 17 Order API
     public IQueryable<T> ApplyCriteria(IQueryable<T> query)
     {
         if(Criteria != null)
@@ -31,6 +37,18 @@ public class BaseSpecification<T>(Expression<Func<T, bool>>? criteria) : ISpecif
 
         return query;
     }
+
+    //Start - Section 17 Orders API
+    protected void AddInclude(Expression<Func<T, object>> includeExpression)
+    {
+        Includes.Add(includeExpression);
+    }
+
+    protected void AddInclude(string includeString)
+    {
+        IncludeStrings.Add(includeString); //For ThenInclude
+    }
+    //Start - Section 17 Orders API
 
     //End - Section 5
     protected void AddOrderBy(Expression<Func<T, object>> OrderByExpression)

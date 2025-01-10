@@ -11,7 +11,7 @@ namespace API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductsController(IGenericRepository<Product> repo) : BaseApiController
+    public class ProductsController(IUnitOfWork unit) : BaseApiController
     {   
         [HttpGet]
         //public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
@@ -24,7 +24,7 @@ namespace API.Controllers
             //Start - Specification Pattern
                 var spec = new ProductSpecification(specParams);
 
-                return await CreatePageResult(repo, spec, specParams.PageIndex, specParams.PageSize);    
+                return await CreatePageResult(unit.Repository<Product>(), spec, specParams.PageIndex, specParams.PageSize);    
             //End - Specification Pattern
         }
 
@@ -33,7 +33,7 @@ namespace API.Controllers
         {
            // var product = await context.Products.FindAsync(id);
 
-           var product = await repo.GetByIdAsync(id);
+           var product = await unit.Repository<Product>().GetByIdAsync(id);
 
             if(product == null)
                 return NotFound();
@@ -48,9 +48,9 @@ namespace API.Controllers
 
             //await context.SaveChangesAsync();
 
-            repo.Add(product);
+            unit.Repository<Product>().Add(product);
 
-            if(await repo.SaveAllAsync()){
+            if(await unit.Complete()){
                 return CreatedAtAction("GetProduct",new {id = product.Id}, product);
             }
 
@@ -72,9 +72,9 @@ namespace API.Controllers
              if(product.Id != id || !ProductExists(id))
                  return BadRequest("Cannot update this product");
 
-            repo.Update(product);
+            unit.Repository<Product>().Update(product);
 
-            if(await repo.SaveAllAsync()){
+            if(await unit.Complete()){
                 return NoContent();
             }     
             return BadRequest("Problem updating the product");
@@ -95,14 +95,14 @@ namespace API.Controllers
 
             // return NoContent(); 
 
-            var product = await repo.GetByIdAsync(id);
+            var product = await unit.Repository<Product>().GetByIdAsync(id);
 
             if(product == null)
                 return NotFound();
 
-            repo.Remove(product);
+            unit.Repository<Product>().Remove(product);
 
-               if(await repo.SaveAllAsync()){
+               if(await unit.Complete()){
                 return NoContent();
             } 
 
@@ -118,7 +118,7 @@ namespace API.Controllers
                     var spec = new BrandListSpecification();
                 //End - Speification Pattern
 
-            return Ok(await repo.ListAsync(spec));
+            return Ok(await unit.Repository<Product>().ListAsync(spec));
             //return Ok(await repo.GetBrandsAsync());
         }
 
@@ -129,7 +129,7 @@ namespace API.Controllers
                //Start - Speification Pattern
                     var spec = new TypeListSpecification();
                 //End - Speification Pattern
-            return Ok(await repo.ListAsync(spec));
+            return Ok(await unit.Repository<Product>().ListAsync(spec));
             //return Ok(await repo.GetTypesAsync());
         }
         
@@ -138,7 +138,7 @@ namespace API.Controllers
         {
             //return context.Products.Any(x => x.Id == id);
 
-            return repo.Exists(id);
+            return unit.Repository<Product>().Exists(id);
         }
     }
 }
