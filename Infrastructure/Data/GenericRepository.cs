@@ -33,7 +33,9 @@ public class GenericRepository<T>(StoreContext context) : IGenericRepository<T> 
     //Start - Speification Pattern
     public async Task<T?> GetEntityWithSpec(ISpecification<T> spec)
     {
-        return await context.Set<T>().FirstOrDefaultAsync();
+        //return await context.Set<T>().FirstOrDefaultAsync();
+        //Need to check ApplySpecification() method when it getting changed
+        return await ApplySpecification(spec).FirstOrDefaultAsync();
     }
 
     public async Task<TResult?> GetEntityWithSpec<TResult>(ISpecification<T, TResult> spec)
